@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.option-list-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+.option-item {
+    min-width: 760px;
+    width: 760px;
+    height: 80px;
+    background-color: #7fddff;
+    box-shadow: 2px 2px 2px #aaa;
+    box-sizing: border-box;
+    margin: 10px;
+    opacity: 0.7;
+    border-radius: 2px;
+    align-items: center;
+    display: flex;
+}
+.option-item-index, .option-item-result {
+    height: 80px;
+    width: 120px;
+    line-height: 80px;
+    text-align: center;
+    font-size: 40px;
+    color: black;
+    font-weight: bold;
+    background-color: #206e8b;
+    color: white;
+}
+.option-item-result {
+    font-size: 25px;
+    animation-duration: 1s;
+    animation-name: slidein;
+}
+.option-item-index span, .option-item-result span {
+    width: 100%;
+    display: inline-block;
+}
+@keyframes slidein {
+    from {
+        transform: rotate3d(0deg)
+    }
+
+    to {
+        transform: rotateY(360deg) 
+    }
+}
+.option-item-content {
+    width: 100%;
+    height: 80px;
+    line-height: 80px;
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.lang-ja {
+    font-family: "ヒラギノ角ゴ Pro", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, "ＭＳ Ｐゴシック", "MS PGothic", "MS Gothic", "ＭＳ ゴシック", "Helvetica Neue", Helvetica, Arial, sans-serif 
+}
+.lang-zh {
+    font-family: "Hiragino Sans GB", "华文细黑", "STHeiti", "微软雅黑", "Microsoft YaHei", SimHei, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.lang-en {
+    font-family: Arial, Helvetica, sans-serif;
+}

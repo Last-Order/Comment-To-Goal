@@ -1,0 +1,37 @@
+env:
+  - YARN_GPG=no
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9.4
+      language: node_js
+      node_js: "10"
+
+    - os: linux
+      language: node_js
+      node_js: "10"
+    
+    - os: windows
+      language: node_js
+      node_js: "10"
+
+script:
+  - |
+    node ./build/scripts/build.js
+
+branches:
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"
+before_deploy:
+  - mkdir ./dist_binary
+  - node ./build/scripts/beforeDeploy.js
+deploy:
+  provider: releases
+  api_key: 
+    secure: Z/u/MZo5wIQAIs9jSWOWTEFqjZ+KrqANilHz15lgX1ilHeKnVlPJROg811RPC2SplrOqzInnlbwwp02xWDmo3X9al9G5Umn6TD0BWsDp0qMkrgVetETXdycn1A9R5XLUSJ2vwCYUjeRWk/qSaZzj7O/yUr5hjTXJqsO9Y2kwBH80Pv/HTC88ntzjI85J5mF2f8Jx7pSOVfia9ie1GKj067oRtq8iAeGaGmsJv/htX8+yAZE+PVNPUwAou6RZhq5sVGE05xrejwiKGS6cCuJ88+7ciNHCpxWOTIYH639GNrOfTKitWzMGEwYmA7cVDkVFIKU9qTIzv1/zuJBbdYCn5JHQECB8Hq5aCsLohwGdpbITtZVHNi0TzWs43W2Lk4zwn3vHKlfZ2hWJX0bHB77IdSo8WTooHdAvhBkDV77ZlhnN5diCEgJ0jHwO9MPEyMfoc9f2MDy4umIY/zpREkJOTp3ICqrDS04cqOaEWtKk+uKvlTxy01H1KAY7fluoxzfw7AqhN8vUoBJUWAyVzQDw+bOeu5XyGk8idYVAZdPjvnvv0f5//KAuhkSRPA6Qij/dMObSc60A7xfZl56vUbfYZDOPqA756KfkaeKCQd1YWwmSHcGUvoLmZuuKSZWgNXfnh+nIb2FHpIRwagLSvzlkYHblYiT6aMpnLc579auBMp0=
+  file_glob: true
+  file: dist_binary/*
+  skip_cleanup: true
+  on:
+    tags: true
+  draft: true

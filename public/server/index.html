@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="assets/vue.min.js"></script>
+    <script src="assets/axios.min.js"></script>
+    <script src="assets/socket.io-client.js"></script>
+    <link rel="stylesheet" type="text/css" href="assets/index.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="option-list-container" :class="containerClass">
+            <template v-for="(item, index) in options">
+                <div class="option-item" :key="index">
+                    <div :class="itemLeftClass">
+                        <span v-if="status === 'polling' || status === 'idle'">
+                            {{ index | indexToLetter }}
+                        </span>
+                        <span v-else>
+                            {{ result[index] }}
+                        </span>
+                    </div>
+                    <div class="option-item-content">
+                        <span>{{ item.label }}</span>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</body>
+<script>
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            options: [],
+            result: [],
+            status: 'idle',
+            nowLanguage: navigator.language.slice(0, 2)
+        },
+        computed: {
+            itemLeftClass() {
+                return {
+                    "option-item-index": this.status === 'idle' || this.status === 'polling',
+                    "option-item-result": this.status === 'result'
+                }
+            },
+            containerClass() {
+                return {
+                    "lang-ja": this.nowLanguage === 'ja',
+                    "lang-zh": this.nowLanguage === 'zh',
+                    "lang-en": this.nowLanguage === 'en'
+                }
+            }
+        },
+        filters: {
+            indexToLetter(index) {
+                return String.fromCharCode(65 + index);
+            }
+        },
+        async mounted() {
+            const socketClient = io.connect('/');
+            socketClient.on('refresh-options', async () => {
+                this.options = await this.getOptionList();
+                this.status = 'polling';
+            });
+            socketClient.on('update-language', async (language) => {
+                this.nowLanguage = language;
+            });
+            socketClient.on('update-result', (result) => {
+                const parsedResult = JSON.parse(result);
+                const total = Object.values(parsedResult).reduce((a, b) => a + b);
+                this.result = Object.values(parsedResult).map((i) => {
+                    if (total === 0) {
+                        return '0%';
+                    }
+                    return `${(i / total * 100).toFixed(1)}%`;
+                });
+                this.status = 'result';
+            });
+            try {
+                this.options = await this.getOptionList();
+            } catch (e) {
+                console.log(e);
+            }
+        },
+        methods: {
+            async getOptionList() {
+                return (await axios.get('/options')).data;
+            }
+        }
+    });
+</script>
+
+</html>
