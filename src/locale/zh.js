@@ -5,30 +5,32 @@ export default {
         'pleaseInputAPIKey': '请正确输入 YouTube API Key',
         'pleaseInputVideoUrl': '请输入直播地址',
         'fillBasicInfo': '基本信息填写',
-        'setPollOptions': '设置投票选项',
-        'addOption': '添加选项',
-        'addOptionLabel': '选项内容',
-        'pleaseInputOptionLabel': '请输入选项内容',
-        'saveOptions': '保存',
-        'optionSaved': '选项已保存',
         'howToGetAPIKey': '如何获得API Key',
         'howToGetAPIKeyLink': 'https://elfsight.com/help/how-to-get-youtube-api-key/'
     },
+    'goal': {
+        'title': '设置目标',
+        'add': '添加目标',
+        'failToGetGiftList': '初始化失败：获得全部礼物列表失败',
+        'failToGetRoomGiftList': '初始化失败：获得房间可用礼物列表失败',
+        'noVideoUrl': '请先填写视频链接',
+        'emptyGiftList': '可用礼物列表为空，重新尝试获取',
+        'invalidVideoUrl': '直播链接不正确'
+    },
     'control': {
         'title': '控制',
-        'start': '开始投票',
-        'end': '结束投票',
+        'start': '开始',
+        'end': '结束',
         'noVideoUrl': '请填写直播地址',
         'failToGetVideoId': '无法解析视频地址',
-        'noOptions': '未设置投票选项'
+        'noGoals': '未设置目标'
     },
     'result': {
         'title': '结果'
     },
     'display': {
         'title': '展示',
-        'instruction': '请在 OBS Studio 中添加浏览器源，输入以上地址；推荐浏览器宽度：1600',
-        'collectPollRealtime': '实时反映投票结果'
+        'instruction': '请在 OBS Studio 中添加浏览器源，输入以上地址；推荐浏览器宽度：1600'
     },
     'setting': {
         'credential': '凭据',

@@ -45,6 +45,17 @@
             </v-form>
           </v-card-text>
         </v-card>
+        <v-card class="index-cards">
+          <v-card-text>
+            <h3>{{ $vuetify.t('$vuetify.goal.title') }}</h3>
+            <v-btn
+              color="primary"
+              :loading="loadingAllGiftList"
+              :disabled="loadingAllGiftList"
+              @click="addGoal"
+            >{{ $vuetify.t('$vuetify.goal.add') }}</v-btn>
+          </v-card-text>
+        </v-card>
       </v-flex>
       <v-flex xs6>
         <v-card class="index-cards">
@@ -77,13 +88,6 @@
             </blockquote>
             <br>
             <p>{{ $vuetify.t('$vuetify.display.instruction') }}</p>
-            <v-form>
-              <v-checkbox
-                :disabled="status !== 'idle'"
-                :label="$vuetify.t('$vuetify.display.collectPollRealtime')"
-                v-model="collectPollRealtime"
-              ></v-checkbox>
-            </v-form>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -95,6 +99,7 @@ import SetAPIKeyDialog from "./Home/SetAPIKey";
 import ResultGraph from "./Home/ResultGraph";
 import CommentListener from "../services/comment";
 import SettingPanel from "./Settings/Index";
+import Bilibili from "../services/api/bilibili";
 const fs = require("fs");
 const path = require("path");
 const socketio = require("socket.io-client");
@@ -103,8 +108,6 @@ import "./Index.css";
 export default {
   data() {
     return {
-      apiKey: undefined,
-      showSetAPIKeyDialog: false,
       showSettingPanel: false,
       startButtonLoading: false,
       videoUrl: "",
@@ -137,10 +140,13 @@ export default {
       nowLanguage: navigator.language.slice(0, 2),
       status: "idle",
       socketClient: undefined,
-      collectPollRealtime: false,
       commentListener: undefined,
       commitResultBufferInterval: undefined,
-      polledUser: {}
+      polledUser: {},
+      allGiftList: [],
+      roomGiftList: [],
+      loadingAllGiftList: false,
+      loadingRoomGiftList: false
     };
   },
   computed: {
@@ -153,11 +159,11 @@ export default {
     }
   },
   mounted() {
-    this.checkInstall();
     this.socketClient = socketio("http://localhost:9317");
     if (localStorage.getItem("language")) {
       this.nowLanguage = localStorage.getItem("language");
     }
+    this.getAllGiftList();
   },
   watch: {
     nowLanguage: function(language) {
@@ -167,13 +173,16 @@ export default {
     }
   },
   methods: {
-    checkInstall() {
-      const apiKey = localStorage.getItem("api_key");
-      if (apiKey) {
-        this.apiKey = apiKey;
-      } else {
-        this.showSetAPIKeyDialog = true;
+    async getAllGiftList() {
+      this.loadingAllGiftList = true;
+      try {
+        this.allGiftList = await Bilibili.getAllGiftList();
+      } catch (e) {
+        this.showErrorMessage(
+          this.$vuetify.t("$vuetify.goal.failToGetGiftList")
+        );
       }
+      this.loadingAllGiftList = false;
     },
     /**
      * Start polling
@@ -184,19 +193,10 @@ export default {
           this.$vuetify.t("$vuetify.control.noVideoUrl")
         );
       }
-      if (
-        (this.videoUrl.includes("youtube") ||
-          this.videoUrl.includes("youtu.be")) &&
-        !this.apiKey
-      ) {
-        this.showSetAPIKeyDialog = true;
-        return;
-      }
       this.startButtonLoading = true;
       // Get live basic information
       this.commentListener = new CommentListener({
-        url: this.videoUrl,
-        apiKey: this.apiKey
+        url: this.videoUrl
       });
       try {
         await this.commentListener.init();
@@ -234,23 +234,7 @@ export default {
     async polling() {
       this.commentListener.connect();
       this.commentListener.on("comment", comment => {
-        const charCode = comment.message[0].toUpperCase().charCodeAt();
-        let userOption;
-        // options available from 'A' to 'Z'
-        if (charCode >= 65 && charCode <= 90) {
-          userOption = String.fromCharCode(charCode);
-        }
-        // and also 'Ａ' to 'Ｚ'
-        if (charCode >= 65313 && charCode <= 65338) {
-          userOption = String.fromCharCode(charCode - 65248);
-        }
-        if (userOption && this.result[userOption] !== undefined) {
-          if (!this.polledUser[comment.userId]) {
-            // duplicated user
-            this.incResult(userOption);
-            this.polledUser[comment.userId] = true;
-          }
-        }
+        
       });
       this.commentListener.on("error", e => {
         this.showErrorMessage(e.toString());
@@ -260,6 +244,26 @@ export default {
         1500
       );
     },
+    async addGoal() {
+      if (!this.videoUrl) {
+        return this.showErrorMessage(this.$vuetify.t("$vuetify.goal.noVideoUrl"));
+      }
+      if (this.allGiftList.length === 0) {
+        this.showErrorMessage(this.$vuetify.t("$vuetify.goal.emptyGiftList"));
+        return this.getAllGiftList();
+      }
+      if (!this.videoUrl.match(/live.bilibili.com\/(\d+?)[?$]*/)) {
+        return this.showErrorMessage(this.$vuetify.t("$vuetify.goal.invalidVideoUrl"));
+      }
+      const roomId = Bilibili.getRoomIdFromUrl(this.videoUrl);
+      this.loadingRoomGiftList = true;
+      try {
+        this.roomGiftList = await Bilibili.getRoomGiftList(roomId, this.allGiftList);
+      } catch (e) {
+        this.showErrorMessage(this.$vuetify.t("$vuetify.goal.failToGetRoomGiftList"));
+      }
+      this.loadingRoomGiftList = false;
+    },
     incResult(key) {
       this.resultBuffer[key] += 1;
     },
@@ -267,10 +271,6 @@ export default {
       for (const key of Object.keys(this.resultBuffer)) {
         this.result[key] = this.result[key] + this.resultBuffer[key];
         this.resultBuffer[key] = 0;
-      }
-      if (this.collectPollRealtime) {
-        // update display
-        this.socketClient.emit("update-result", JSON.stringify(this.result));
       }
     },
     saveOptions() {

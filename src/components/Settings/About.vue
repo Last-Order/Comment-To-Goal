@@ -3,11 +3,11 @@
     <v-layout>
       <v-flex>
         <div>
-          YouTube-Live-Poll {{ version }}
+          Comment-To-Goal {{ version }}
           <a
-            href="https://github.com/Last-Order/YouTube-Live-Poll"
+            href="https://github.com/Last-Order/Comment-To-Goal"
             target="_blank"
-          >https://github.com/Last-Order/YouTube-Live-Poll</a>
+          >https://github.com/Last-Order/Comment-To-Goal</a>
         </div>
         <div>Open-sourced under GPLv3. © 2019, Eridanus Sora, member of MeowSound Idols.</div>
       </v-flex>
