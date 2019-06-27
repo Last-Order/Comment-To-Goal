@@ -4,6 +4,16 @@
       <v-icon small @click="showSettingPanel = true">settings</v-icon>
       <v-icon small @click="refresh">refresh</v-icon>
     </div>
+    <v-dialog v-model="showAddGoalPanel">
+      <v-card>
+        <v-card-title>
+          <span class="headline">{{ $vuetify.t('$vuetify.index.add') }}</span>
+        </v-card-title>
+        <v-card-text>
+          <setting-panel></setting-panel>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="showSettingPanel">
       <v-card>
         <v-card-title>
@@ -13,9 +23,6 @@
           <setting-panel></setting-panel>
         </v-card-text>
       </v-card>
-    </v-dialog>
-    <v-dialog v-model="showSetAPIKeyDialog">
-      <set-api-key-dialog @error="showErrorMessage" @saved="showSetAPIKeyDialog = false"/>
     </v-dialog>
     <v-snackbar v-model="error.show" color="error" :top="true" :timeout="5000">
       {{ error.message }}
@@ -50,8 +57,8 @@
             <h3>{{ $vuetify.t('$vuetify.goal.title') }}</h3>
             <v-btn
               color="primary"
-              :loading="loadingAllGiftList"
-              :disabled="loadingAllGiftList"
+              :loading="loadingAllGiftList || loadingRoomGiftList"
+              :disabled="loadingAllGiftList || loadingRoomGiftList"
               @click="addGoal"
             >{{ $vuetify.t('$vuetify.goal.add') }}</v-btn>
           </v-card-text>
@@ -95,10 +102,10 @@
   </v-container>
 </template>
 <script>
-import SetAPIKeyDialog from "./Home/SetAPIKey";
 import ResultGraph from "./Home/ResultGraph";
 import CommentListener from "../services/comment";
 import SettingPanel from "./Settings/Index";
+import AddGoalPanel from './Home/AddGoal';
 import Bilibili from "../services/api/bilibili";
 const fs = require("fs");
 const path = require("path");
@@ -109,6 +116,7 @@ export default {
   data() {
     return {
       showSettingPanel: false,
+      showAddGoalPanel: false,
       startButtonLoading: false,
       videoUrl: "",
       videoId: "",
@@ -255,6 +263,7 @@ export default {
       if (!this.videoUrl.match(/live.bilibili.com\/(\d+?)[?$]*/)) {
         return this.showErrorMessage(this.$vuetify.t("$vuetify.goal.invalidVideoUrl"));
       }
+      // filter out gifts available for this room
       const roomId = Bilibili.getRoomIdFromUrl(this.videoUrl);
       this.loadingRoomGiftList = true;
       try {
@@ -311,9 +320,9 @@ export default {
     }
   },
   components: {
-    "set-api-key-dialog": SetAPIKeyDialog,
     ResultGraph,
-    SettingPanel
+    SettingPanel,
+    AddGoalPanel
   }
 };
 </script>

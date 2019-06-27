@@ -1,0 +1,32 @@
+<template>
+    <v-card>
+    <v-card-title>
+      <span class="headline">{{ $vuetify.t('$vuetify.index.setAPIKey') }}</span>
+    </v-card-title>
+    <v-card-text>
+      <v-container>
+        <v-layout>
+          <v-select
+            :options="gifts"
+          >
+            
+          </v-select>
+        </v-layout>
+      </v-container>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn color="blue darken-1" flat @click="save">{{ $vuetify.t('$vuetify.index.confirm') }}</v-btn>
+    </v-card-actions>
+  </v-card>
+</template>
+<script>
+export default {
+    props: ['gifts'],
+    data() {
+        return {
+            options: []
+        };
+    }
+}
+</script>
