@@ -51,7 +51,7 @@
             <v-btn
               color="primary"
               :loading="loadingAllGiftList || loadingRoomGiftList"
-              :disabled="loadingAllGiftList || loadingRoomGiftList"
+              :disabled="loadingAllGiftList || loadingRoomGiftList || status === 'polling'"
               @click="addGoal"
             >
               <template v-if="targetGiftAmount === 0">{{ $vuetify.t('$vuetify.goal.add') }}</template>
@@ -83,14 +83,16 @@
         <v-card class="index-cards">
           <v-card-text>
             <h3>{{ $vuetify.t('$vuetify.result.title') }}</h3>
+            <template v-if="status === 'polling' && giftsToCollect.length > 0">
+              <result :amount="targetGiftAmount" :now="result[giftsToCollect[0].name]" :name="giftsToCollect[0].name"></result>
+            </template>
           </v-card-text>
-          <result-graph :graph="result" />
         </v-card>
         <v-card class="index-cards">
           <v-card-text>
             <h3>{{ $vuetify.t('$vuetify.display.title') }}</h3>
             <blockquote>
-              <code>http://localhost:9317</code>
+              <code>http://localhost:9318</code>
             </blockquote>
             <br />
             <p>{{ $vuetify.t('$vuetify.display.instruction') }}</p>
@@ -101,11 +103,11 @@
   </v-container>
 </template>
 <script>
-import ResultGraph from "./Home/ResultGraph";
 import CommentListener from "../services/comment";
 import SettingPanel from "./Settings/Index";
 import AddGoalPanel from "./Home/AddGoal";
-import Goal from './Home/Goal';
+import Goal from "./Home/Goal";
+import Result from "./Home/Result";
 import Bilibili from "../services/api/bilibili";
 const fs = require("fs");
 const path = require("path");
@@ -152,7 +154,7 @@ export default {
       allGiftList: [],
       roomGiftList: [],
       giftsToCollect: [],
-      giftIdsToCollect: [],
+      giftNamesToCollect: [],
       targetGiftAmount: 0,
       loadingAllGiftList: false,
       loadingRoomGiftList: false
@@ -168,7 +170,7 @@ export default {
     }
   },
   mounted() {
-    this.socketClient = socketio("http://localhost:9317");
+    this.socketClient = socketio("http://localhost:9318");
     if (localStorage.getItem("language")) {
       this.nowLanguage = localStorage.getItem("language");
     }
@@ -184,7 +186,7 @@ export default {
   methods: {
     async getAllGiftList() {
       this.loadingAllGiftList = true;
-      const cachedGiftList = localStorage.getItem('cached_gift_list');
+      const cachedGiftList = localStorage.getItem("cached_gift_list");
       if (cachedGiftList) {
         // use cached gift list first. update in background.
         this.allGiftList = JSON.parse(cachedGiftList);
@@ -192,7 +194,10 @@ export default {
       }
       try {
         this.allGiftList = await Bilibili.getAllGiftList();
-        localStorage.setItem('cached_gift_list', JSON.stringify(this.allGiftList));
+        localStorage.setItem(
+          "cached_gift_list",
+          JSON.stringify(this.allGiftList)
+        );
       } catch (e) {
         this.showErrorMessage(
           this.$vuetify.t("$vuetify.goal.failToGetGiftList")
@@ -227,12 +232,13 @@ export default {
       // reset result
       const result = {};
       const resultBuffer = {};
-      for (const index in this.options) {
-        result[String.fromCharCode(65 + parseInt(index))] = 0;
-        resultBuffer[String.fromCharCode(65 + parseInt(index))] = 0;
+      for (const gift of this.giftsToCollect) {
+        result[gift.name] = 0;
+        resultBuffer[gift.name] = 0;
       }
       this.result = result;
       this.resultBuffer = resultBuffer;
+      this.giftNamesToCollect = Array.from(this.giftsToCollect, gift => gift.name);
       this.status = "polling";
       // start polling to retrieve live comments
       this.polling();
@@ -249,7 +255,11 @@ export default {
     },
     async polling() {
       this.commentListener.connect();
-      this.commentListener.on("comment", comment => {});
+      this.commentListener.on("gift", gift => {
+        if (this.giftNamesToCollect.includes(gift.giftName)) {
+          this.resultBuffer[gift.giftName] += gift.num;
+        }
+      });
       this.commentListener.on("error", e => {
         this.showErrorMessage(e.toString());
       });
@@ -263,7 +273,6 @@ export default {
      */
     async addGoal() {
       this.roomGiftList = [];
-      this.giftsToCollect = []; // TODO: support multi gifts
       if (!this.videoUrl) {
         return this.showErrorMessage(
           this.$vuetify.t("$vuetify.goal.noVideoUrl")
@@ -297,11 +306,17 @@ export default {
       }
     },
     handleAddGoalSaved({ giftId, amount }) {
+      this.giftsToCollect = []; // TODO: support multi gifts
       this.giftsToCollect.push(
         this.roomGiftList.find(gift => gift.id === giftId)
       );
       this.targetGiftAmount = parseInt(amount);
       this.showAddGoalPanel = false;
+      this.options = {
+        name: this.giftsToCollect[0].name,
+        amount: this.targetGiftAmount
+      };
+      this.saveOptions();
     },
     incResult(key) {
       this.resultBuffer[key] += 1;
@@ -311,14 +326,15 @@ export default {
         this.result[key] = this.result[key] + this.resultBuffer[key];
         this.resultBuffer[key] = 0;
       }
+      this.socketClient.emit('update-result', JSON.stringify(this.result));
     },
     saveOptions() {
       fs.writeFileSync(
         // eslint-disable-next-line
-        path.resolve(__static, "../runtime/options.json"),
+        path.resolve(__static, "../runtime/settings.json"),
         JSON.stringify(this.options)
       );
-      this.socketClient.emit("refresh-options", "");
+      this.socketClient.emit("refresh-settings", "");
       this.socketClient.emit("update-language", this.nowLanguage);
       this.showNotice(this.$vuetify.t("$vuetify.index.optionSaved"));
     },
@@ -350,10 +366,10 @@ export default {
     }
   },
   components: {
-    ResultGraph,
     SettingPanel,
     AddGoalPanel,
-    Goal
+    Goal,
+    Result
   }
 };
 </script>

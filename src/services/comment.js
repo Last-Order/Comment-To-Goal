@@ -25,6 +25,9 @@ class CommentListener extends EventEmitter {
         this.client.on('comment', (comment) => {
             this.emit('comment', comment);
         });
+        this.client.on('gift', (gift) => {
+            this.emit('gift', gift);
+        })
         this.client.on('error', (e) => {
             this.emit('error', e);
         });

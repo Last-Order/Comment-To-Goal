@@ -5,16 +5,16 @@ const io = require('socket.io')(server);
 const fs = require('fs');
 const path = require('path');
 
-server.listen(9317);
+server.listen(9318);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.get('/options', (req, res) => {
+app.get('/settings', (req, res) => {
   res.json(
     JSON.parse(
-      fs.readFileSync(path.resolve(__dirname, '../../runtime/options.json')).toString()
+      fs.readFileSync(path.resolve(__dirname, '../../runtime/settings.json')).toString()
     )
   );
 });
@@ -22,8 +22,8 @@ app.get('/options', (req, res) => {
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 io.on('connection', function (socket) {
-  socket.on('refresh-options', (data) => {
-    socket.broadcast.emit('refresh-options', data);
+  socket.on('refresh-settings', (data) => {
+    socket.broadcast.emit('refresh-settings', data);
   });
   socket.on('update-result', (data) => {
     socket.broadcast.emit('update-result', data);

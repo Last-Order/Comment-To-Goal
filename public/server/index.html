@@ -10,19 +10,13 @@
 
 <body>
     <div id="app">
-        <div class="option-list-container" :class="containerClass">
-            <template v-for="(item, index) in options">
-                <div class="option-item" :key="index">
-                    <div :class="itemLeftClass">
-                        <span v-if="status === 'polling' || status === 'idle'">
-                            {{ index | indexToLetter }}
-                        </span>
-                        <span v-else>
-                            {{ result[index] }}
-                        </span>
-                    </div>
-                    <div class="option-item-content">
-                        <span>{{ item.label }}</span>
+        <div class="result-container" :class="containerClass">
+            <template v-if="1 || name && amount">
+                <div class="gift-container">
+                    <div class="gift-name">{{ settings && settings.name }}</div>
+                    <div class="gift-progress">
+                        <div class="gift-progress-now" :style="{ width: nowValuePercent }"></div>
+                        <div class="gift-progress-text">{{ nowValue }}%</div>
                     </div>
                 </div>
             </template>
@@ -33,60 +27,52 @@
     const vm = new Vue({
         el: '#app',
         data: {
-            options: [],
-            result: [],
+            result: {},
             status: 'idle',
-            nowLanguage: navigator.language.slice(0, 2)
+            nowLanguage: navigator.language.slice(0, 2),
+            settings: {},
+            now: 0
         },
         computed: {
-            itemLeftClass() {
-                return {
-                    "option-item-index": this.status === 'idle' || this.status === 'polling',
-                    "option-item-result": this.status === 'result'
-                }
-            },
             containerClass() {
                 return {
                     "lang-ja": this.nowLanguage === 'ja',
                     "lang-zh": this.nowLanguage === 'zh',
                     "lang-en": this.nowLanguage === 'en'
                 }
-            }
-        },
-        filters: {
-            indexToLetter(index) {
-                return String.fromCharCode(65 + index);
+            },
+            nowValue() {
+                console.log(this.result[this.settings.name]);
+                if (!this.settings.amount || !this.result[this.settings.name]) {
+                    return 0;
+                }
+                return Math.round((this.result[this.settings.name] / this.settings.amount) * 100);
+            },
+            nowValuePercent() {
+                return Math.min(100, this.nowValue).toString() + '%';
             }
         },
         async mounted() {
             const socketClient = io.connect('/');
-            socketClient.on('refresh-options', async () => {
-                this.options = await this.getOptionList();
-                this.status = 'polling';
+            socketClient.on('refresh-settings', async () => {
+                this.settings = await this.getSettings();
             });
             socketClient.on('update-language', async (language) => {
                 this.nowLanguage = language;
             });
             socketClient.on('update-result', (result) => {
-                const parsedResult = JSON.parse(result);
-                const total = Object.values(parsedResult).reduce((a, b) => a + b);
-                this.result = Object.values(parsedResult).map((i) => {
-                    if (total === 0) {
-                        return '0%';
-                    }
-                    return `${(i / total * 100).toFixed(1)}%`;
-                });
-                this.status = 'result';
+                console.log(result);
+                this.result = JSON.parse(result);
             });
             try {
-                this.options = await this.getOptionList();
+                this.settings = await this.getSettings();
             } catch (e) {
                 console.log(e);
             }
         },
         methods: {
-            async getOptionList() {
-                return (await axios.get('/options')).data;
+            async getSettings() {
+                return (await axios.get('/settings')).data;
             }
         }
     });

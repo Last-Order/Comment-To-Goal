@@ -1,12 +1,9 @@
 export default {
     'index': {
-        'setAPIKey': '请设定 YouTube API Key',
         'confirm': '确定',
-        'pleaseInputAPIKey': '请正确输入 YouTube API Key',
         'pleaseInputVideoUrl': '请输入直播地址',
         'fillBasicInfo': '基本信息填写',
-        'howToGetAPIKey': '如何获得API Key',
-        'howToGetAPIKeyLink': 'https://elfsight.com/help/how-to-get-youtube-api-key/'
+        'optionSaved': '设置已保存'
     },
     'goal': {
         'title': '设置目标',
@@ -41,9 +38,7 @@ export default {
     },
     'setting': {
         'setting': '设置',
-        'credential': '凭据',
         'about': '关于',
-        'setAPIKey': '设定 YouTube API Key',
         'save': '保存'
     },
     'noDataText': '无可用数据'
