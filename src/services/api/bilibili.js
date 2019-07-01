@@ -6,9 +6,10 @@ class Bilibili {
     }
     static async getRoomGiftList(roomId, allGiftList) {
         const GET_ROOM_GIFT_LIST_API = `https://api.live.bilibili.com/gift/v3/live/room_gift_list?roomid=${roomId}&platform=all`;
-        const roomGiftList = (await axios.get(GET_ROOM_GIFT_LIST_API)).data.data.list;
+        const response = (await axios.get(GET_ROOM_GIFT_LIST_API)).data.data;
+        const roomGiftList = response.list.concat(response.old_list);
         if (allGiftList) {
-            const availableGiftIds = Array.from(roomGiftList, gift => gift.gift_id);
+            const availableGiftIds = Array.from(roomGiftList, gift => gift.id);
             return allGiftList.filter(gift => availableGiftIds.includes(gift.id));
         }
         return roomGiftList;

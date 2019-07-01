@@ -5,19 +5,12 @@
       <v-icon small @click="refresh">refresh</v-icon>
     </div>
     <v-dialog v-model="showAddGoalPanel">
-      <v-card>
-        <v-card-title>
-          <span class="headline">{{ $vuetify.t('$vuetify.index.add') }}</span>
-        </v-card-title>
-        <v-card-text>
-          <setting-panel></setting-panel>
-        </v-card-text>
-      </v-card>
+      <add-goal-panel :gifts="roomGiftList" @error="showErrorMessage" @saved="handleAddGoalSaved"></add-goal-panel>
     </v-dialog>
     <v-dialog v-model="showSettingPanel">
       <v-card>
         <v-card-title>
-          <span class="headline">设置</span>
+          <span class="headline">{{ $vuetify.t('$vuetify.setting.setting') }}</span>
         </v-card-title>
         <v-card-text>
           <setting-panel></setting-panel>
@@ -60,7 +53,13 @@
               :loading="loadingAllGiftList || loadingRoomGiftList"
               :disabled="loadingAllGiftList || loadingRoomGiftList"
               @click="addGoal"
-            >{{ $vuetify.t('$vuetify.goal.add') }}</v-btn>
+            >
+              <template v-if="targetGiftAmount === 0">{{ $vuetify.t('$vuetify.goal.add') }}</template>
+              <template v-else>{{ $vuetify.t('$vuetify.goal.change') }}</template>
+            </v-btn>
+            <template v-if="targetGiftAmount !== 0">
+              <goal :gifts="giftsToCollect" :amount="targetGiftAmount"></goal>
+            </template>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -85,7 +84,7 @@
           <v-card-text>
             <h3>{{ $vuetify.t('$vuetify.result.title') }}</h3>
           </v-card-text>
-          <result-graph :graph="result"/>
+          <result-graph :graph="result" />
         </v-card>
         <v-card class="index-cards">
           <v-card-text>
@@ -93,7 +92,7 @@
             <blockquote>
               <code>http://localhost:9317</code>
             </blockquote>
-            <br>
+            <br />
             <p>{{ $vuetify.t('$vuetify.display.instruction') }}</p>
           </v-card-text>
         </v-card>
@@ -105,7 +104,8 @@
 import ResultGraph from "./Home/ResultGraph";
 import CommentListener from "../services/comment";
 import SettingPanel from "./Settings/Index";
-import AddGoalPanel from './Home/AddGoal';
+import AddGoalPanel from "./Home/AddGoal";
+import Goal from './Home/Goal';
 import Bilibili from "../services/api/bilibili";
 const fs = require("fs");
 const path = require("path");
@@ -119,8 +119,6 @@ export default {
       showAddGoalPanel: false,
       startButtonLoading: false,
       videoUrl: "",
-      videoId: "",
-      chatId: "",
       error: {
         show: false,
         message: ""
@@ -153,6 +151,9 @@ export default {
       polledUser: {},
       allGiftList: [],
       roomGiftList: [],
+      giftsToCollect: [],
+      giftIdsToCollect: [],
+      targetGiftAmount: 0,
       loadingAllGiftList: false,
       loadingRoomGiftList: false
     };
@@ -183,8 +184,15 @@ export default {
   methods: {
     async getAllGiftList() {
       this.loadingAllGiftList = true;
+      const cachedGiftList = localStorage.getItem('cached_gift_list');
+      if (cachedGiftList) {
+        // use cached gift list first. update in background.
+        this.allGiftList = JSON.parse(cachedGiftList);
+        this.loadingAllGiftList = false;
+      }
       try {
         this.allGiftList = await Bilibili.getAllGiftList();
+        localStorage.setItem('cached_gift_list', JSON.stringify(this.allGiftList));
       } catch (e) {
         this.showErrorMessage(
           this.$vuetify.t("$vuetify.goal.failToGetGiftList")
@@ -241,9 +249,7 @@ export default {
     },
     async polling() {
       this.commentListener.connect();
-      this.commentListener.on("comment", comment => {
-        
-      });
+      this.commentListener.on("comment", comment => {});
       this.commentListener.on("error", e => {
         this.showErrorMessage(e.toString());
       });
@@ -252,26 +258,50 @@ export default {
         1500
       );
     },
+    /**
+     * 添加目标
+     */
     async addGoal() {
+      this.roomGiftList = [];
+      this.giftsToCollect = []; // TODO: support multi gifts
       if (!this.videoUrl) {
-        return this.showErrorMessage(this.$vuetify.t("$vuetify.goal.noVideoUrl"));
+        return this.showErrorMessage(
+          this.$vuetify.t("$vuetify.goal.noVideoUrl")
+        );
       }
       if (this.allGiftList.length === 0) {
         this.showErrorMessage(this.$vuetify.t("$vuetify.goal.emptyGiftList"));
         return this.getAllGiftList();
       }
       if (!this.videoUrl.match(/live.bilibili.com\/(\d+?)[?$]*/)) {
-        return this.showErrorMessage(this.$vuetify.t("$vuetify.goal.invalidVideoUrl"));
+        return this.showErrorMessage(
+          this.$vuetify.t("$vuetify.goal.invalidVideoUrl")
+        );
       }
       // filter out gifts available for this room
       const roomId = Bilibili.getRoomIdFromUrl(this.videoUrl);
       this.loadingRoomGiftList = true;
       try {
-        this.roomGiftList = await Bilibili.getRoomGiftList(roomId, this.allGiftList);
+        this.roomGiftList = await Bilibili.getRoomGiftList(
+          roomId,
+          this.allGiftList
+        );
       } catch (e) {
-        this.showErrorMessage(this.$vuetify.t("$vuetify.goal.failToGetRoomGiftList"));
+        this.showErrorMessage(
+          this.$vuetify.t("$vuetify.goal.failToGetRoomGiftList")
+        );
       }
       this.loadingRoomGiftList = false;
+      if (this.roomGiftList.length > 0) {
+        this.showAddGoalPanel = true;
+      }
+    },
+    handleAddGoalSaved({ giftId, amount }) {
+      this.giftsToCollect.push(
+        this.roomGiftList.find(gift => gift.id === giftId)
+      );
+      this.targetGiftAmount = parseInt(amount);
+      this.showAddGoalPanel = false;
     },
     incResult(key) {
       this.resultBuffer[key] += 1;
@@ -322,7 +352,8 @@ export default {
   components: {
     ResultGraph,
     SettingPanel,
-    AddGoalPanel
+    AddGoalPanel,
+    Goal
   }
 };
 </script>
