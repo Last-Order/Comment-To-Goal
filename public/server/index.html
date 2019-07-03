@@ -42,7 +42,6 @@
                 }
             },
             nowValue() {
-                console.log(this.result[this.settings.name]);
                 if (!this.settings.amount || !this.result[this.settings.name]) {
                     return 0;
                 }
@@ -61,7 +60,6 @@
                 this.nowLanguage = language;
             });
             socketClient.on('update-result', (result) => {
-                console.log(result);
                 this.result = JSON.parse(result);
             });
             try {

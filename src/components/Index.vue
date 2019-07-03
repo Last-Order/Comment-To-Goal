@@ -84,7 +84,11 @@
           <v-card-text>
             <h3>{{ $vuetify.t('$vuetify.result.title') }}</h3>
             <template v-if="status === 'polling' && giftsToCollect.length > 0">
-              <result :amount="targetGiftAmount" :now="result[giftsToCollect[0].name]" :name="giftsToCollect[0].name"></result>
+              <result
+                :amount="targetGiftAmount"
+                :now="result[giftsToCollect[0].name]"
+                :name="giftsToCollect[0].name"
+              ></result>
             </template>
           </v-card-text>
         </v-card>
@@ -96,6 +100,8 @@
             </blockquote>
             <br />
             <p>{{ $vuetify.t('$vuetify.display.instruction') }}</p>
+            <h3>{{ $vuetify.t('$vuetify.display.progressBarStyle') }}</h3>
+            <color-group :initial="initialColorGroupIndex" @change="handleColorGroupChange" />
           </v-card-text>
         </v-card>
       </v-flex>
@@ -108,6 +114,7 @@ import SettingPanel from "./Settings/Index";
 import AddGoalPanel from "./Home/AddGoal";
 import Goal from "./Home/Goal";
 import Result from "./Home/Result";
+import ColorGroup from "./Home/ColorGroup";
 import Bilibili from "../services/api/bilibili";
 const fs = require("fs");
 const path = require("path");
@@ -167,6 +174,9 @@ export default {
         "lang-zh": this.nowLanguage === "zh",
         "lang-en": this.nowLanguage === "en"
       };
+    },
+    initialColorGroupIndex() {
+      return localStorage.getItem("color_group_index") || 1;
     }
   },
   mounted() {
@@ -238,7 +248,10 @@ export default {
       }
       this.result = result;
       this.resultBuffer = resultBuffer;
-      this.giftNamesToCollect = Array.from(this.giftsToCollect, gift => gift.name);
+      this.giftNamesToCollect = Array.from(
+        this.giftsToCollect,
+        gift => gift.name
+      );
       this.status = "polling";
       // start polling to retrieve live comments
       this.polling();
@@ -318,6 +331,9 @@ export default {
       };
       this.saveOptions();
     },
+    handleColorGroupChange(index) {
+      localStorage.setItem("color_group_index", index);
+    },
     incResult(key) {
       this.resultBuffer[key] += 1;
     },
@@ -326,7 +342,7 @@ export default {
         this.result[key] = this.result[key] + this.resultBuffer[key];
         this.resultBuffer[key] = 0;
       }
-      this.socketClient.emit('update-result', JSON.stringify(this.result));
+      this.socketClient.emit("update-result", JSON.stringify(this.result));
     },
     saveOptions() {
       fs.writeFileSync(
@@ -369,7 +385,8 @@ export default {
     SettingPanel,
     AddGoalPanel,
     Goal,
-    Result
+    Result,
+    ColorGroup
   }
 };
 </script>

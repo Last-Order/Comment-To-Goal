@@ -34,7 +34,8 @@ export default {
     },
     'display': {
         'title': '展示',
-        'instruction': '请在 OBS Studio 中添加浏览器源，输入以上地址；推荐浏览器宽度：1600'
+        'instruction': '请在 OBS Studio 中添加浏览器源，输入以上地址；推荐浏览器宽度：1600',
+        'progressBarStyle': '进度条样式'
     },
     'setting': {
         'setting': '设置',
