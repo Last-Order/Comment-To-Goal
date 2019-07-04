@@ -31,6 +31,9 @@ io.on('connection', function (socket) {
   socket.on('update-language', (data) => {
     socket.broadcast.emit('update-language', data);
   });
+  socket.on('update-colors', (data) => {
+    socket.broadcast.emit('update-colors', data);
+  });
 });
 
 module.exports = {};

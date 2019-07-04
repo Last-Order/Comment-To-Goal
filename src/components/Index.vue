@@ -162,6 +162,9 @@ export default {
       roomGiftList: [],
       giftsToCollect: [],
       giftNamesToCollect: [],
+      options: {
+        
+      },
       targetGiftAmount: 0,
       loadingAllGiftList: false,
       loadingRoomGiftList: false
@@ -184,6 +187,11 @@ export default {
     if (localStorage.getItem("language")) {
       this.nowLanguage = localStorage.getItem("language");
     }
+    // eslint-disable-next-line
+    if (fs.existsSync(path.resolve(__static, "../runtime/settings.json"))) {
+      // eslint-disable-next-line
+      this.options = JSON.parse(fs.readFileSync(path.resolve(__static, "../runtime/settings.json")).toString());
+    }
     this.getAllGiftList();
   },
   watch: {
@@ -191,6 +199,9 @@ export default {
       localStorage.setItem("language", language);
       this.socketClient.emit("update-language", language);
       this.$vuetify.lang.current = language;
+    },
+    options: function() {
+      this.saveOptions();
     }
   },
   methods: {
@@ -326,13 +337,18 @@ export default {
       this.targetGiftAmount = parseInt(amount);
       this.showAddGoalPanel = false;
       this.options = {
+        ...this.options,
         name: this.giftsToCollect[0].name,
-        amount: this.targetGiftAmount
+        amount: this.targetGiftAmount,
       };
       this.saveOptions();
     },
     handleColorGroupChange(index) {
       localStorage.setItem("color_group_index", index);
+      this.options = {
+        ...this.options,
+        colorIndex: index
+      };
     },
     incResult(key) {
       this.resultBuffer[key] += 1;

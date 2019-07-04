@@ -12,10 +12,10 @@
     <div id="app">
         <div class="result-container" :class="containerClass">
             <template v-if="1 || name && amount">
-                <div class="gift-container">
-                    <div class="gift-name">{{ settings && settings.name }}</div>
+                <div class="gift-container" :style="{ backgroundColor: containerBackgroundColor }">
+                    <div class="gift-name" :style="{ backgroundColor: giftNameBackgroundColor }">{{ settings && settings.name }}</div>
                     <div class="gift-progress">
-                        <div class="gift-progress-now" :style="{ width: nowValuePercent }"></div>
+                        <div class="gift-progress-now" :style="{ width: nowValuePercent, backgroundColor: progressBackgroundColor }"></div>
                         <div class="gift-progress-text">{{ nowValue }}%</div>
                     </div>
                 </div>
@@ -24,6 +24,22 @@
     </div>
 </body>
 <script>
+    const ColorPresets = [{
+        index: 1,
+        colors: ["#206e8b", "#0d97c9", "#7fddff"]
+    },
+    {
+        index: 2,
+        colors: ["#880E4F", "#EC407A", "#F48FB1"]
+    },
+    {
+        index: 3,
+        colors: ["#004D40", "#26A69A", "#80CBC4"]
+    },
+    {
+        index: 4,
+        colors: ["#E65100", "#FB8C00", "#FFCC80"]
+    }];
     const vm = new Vue({
         el: '#app',
         data: {
@@ -49,6 +65,15 @@
             },
             nowValuePercent() {
                 return Math.min(100, this.nowValue).toString() + '%';
+            },
+            giftNameBackgroundColor() {
+                return ColorPresets[(this.settings.colorIndex || 1) - 1].colors[0];
+            },
+            progressBackgroundColor() {
+                return ColorPresets[(this.settings.colorIndex || 1) - 1].colors[1];
+            },
+            containerBackgroundColor() {
+                return ColorPresets[(this.settings.colorIndex || 1) - 1].colors[2];
             }
         },
         async mounted() {
