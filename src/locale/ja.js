@@ -1,40 +1,46 @@
 export default {
     'index': {
-        'setAPIKey': 'YouTube API Keyの設定',
-        'confirm': '確認する',
-        'pleaseInputAPIKey': 'YouTube API Keyを正しく入力してください',
-        'pleaseInputVideoUrl': 'ライブURLを入力してください',
-        'fillBasicInfo': '基本情報',
-        'setPollOptions': '選択肢設定',
-        'addOption': '選択肢追加',
-        'addOptionLabel': '選択肢内容',
-        'pleaseInputOptionLabel': '選択肢の内容を入力してください',
-        'saveOptions': '保存する',
-        'optionSaved': '保存しました',
-        'howToGetAPIKey': 'API Keyの取得方法',
-        'howToGetAPIKeyLink': 'https://www.sourcenext.com/support/qa/?faq=HP-08470/'
+        'confirm': ',確定',
+        'pleaseInputVideoUrl': ',ライブURLを入力してください',
+        'fillBasicInfo': ',基本情報',
+        'optionSaved': '設定保存しました',
+    },
+    'goal': {
+        'title': '設置目標',
+        'add': '追加目標',
+        'change': '修正目標',
+        'failToGetGiftList': '初期化失敗；全てのプレゼンデ―タ読み取り失敗',
+        'failToGetRoomGiftList': '初期化失敗；ライブ部屋で使えるプレゼンデ―タ読み取り失敗',
+        'noVideoUrl': 'URLを入力してください',
+        'emptyGiftList': '使えるプレゼントデ―タはゼロ　もう一度読み取ってください',
+        'invalidVideoUrl': 'ライブURL不正解',
+        'selectGift': 'プレゼントタイプを選択してください',
+        'setAmount': '目標数量を設置してください',
+        'pleaseSelectGiftType': 'プレゼントタイプを設置してください',
+        'pleaseSetGiftAmount': 'プレゼント目標数量を設置してください',
+        'giftName': 'プレゼントの名前',
+        'giftAmount': 'プレゼント目標数量',
     },
     'control': {
-        'title': 'コントロール',
-        'start': '投票を開始',
-        'end': '投票を終了',
+        'title': 'コントロ—ル',
+        'start': '開始',
+        'end': '終了',
         'noVideoUrl': 'ライブURLを入力してください',
-        'failToGetVideoId': 'ライブURLを分析できません',
-        'noOptions': '投票オプションが設定されていません'
+        'failToGetVideoId': 'URLを分析出来ない',
+        'noGoals': '目標を選択してください',
     },
     'result': {
-        'title': '結果'
+        'title': '結果',
     },
     'display': {
         'title': '結果表示',
         'instruction': 'OBS Studioソースでブラウザを追加して上記のアドレスを入力してください；推奨ブラウザ幅：1600',
-        'collectPollRealtime': 'リアルタイム結果表示'
+        'progressBarStyle': 'プログレスバータイプ'
     },
     'setting': {
-        'credential': 'クレデンシャル',
-        'about': 'バージョン情報',
-        'setAPIKey': 'YouTube API Keyの設定',
-        'save': '保存する'
+        'setting': '設置',
+        'about': 'バ－ジョン情報',
+        'save': '保存する',
     },
-    'noDataText': 'データがありません'
+    'noDataText': 'データがありません',
 }
